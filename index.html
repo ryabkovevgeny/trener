@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <title>100‑дневный тренировочный план</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Preload фоновых изображений -->
+    <link rel="preload" as="image" href="images/motiv1.jpg">
+    <link rel="preload" as="image" href="images/motiv2.jpg">
+    <link rel="preload" as="image" href="images/motiv3.jpg">
+
     <style>
         :root{
             --primary:#0066cc;
@@ -18,6 +24,7 @@
             --done:#16a34a;
         }
         *{ box-sizing: border-box; }
+        html, body { height: 100%; }
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,6 +32,37 @@
             color: #333;
             background: var(--bg);
         }
+
+        /* ===== BG SLIDESHOW ===== */
+        .bg-slideshow{
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            overflow: hidden;
+            background: linear-gradient(120deg, #0f172a, #111827); /* fallback */
+        }
+        .bg-slide{
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center center;
+            filter: saturate(1.05) contrast(1.05) brightness(0.9);
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+        .bg-slide.active{ opacity: 1; }
+        .bg-overlay{
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: rgba(0,0,0,0.35);
+            backdrop-filter: blur(1px);
+        }
+        @media (prefers-reduced-motion: reduce){
+            .bg-slide{ transition: none; }
+        }
+
         .container {
             max-width: 1200px;
             margin: auto;
@@ -46,8 +84,10 @@
             font-weight: 500;
         }
         nav a:hover { text-decoration: underline; }
+
+        /* лёгкая прозрачность, чтобы был виден фон */
         section {
-            background: var(--card);
+            background: rgba(255,255,255,0.9);
             margin: 1.2rem 0;
             padding: 1.2rem;
             border-radius: 10px;
@@ -77,6 +117,7 @@
             border-radius: 8px;
             overflow: hidden;
             transition: box-shadow 0.3s ease;
+            background: rgba(255,255,255,0.92);
         }
         .day-card:hover { box-shadow: 0 2px 10px var(--shadow); }
         .day-header {
@@ -107,14 +148,6 @@
             flex-shrink: 0;
         }
         .day-header .arrow { font-weight: 700; }
-        .day-header .done-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-            color: var(--done);
-            font-weight: 600;
-        }
         .day-header.done {
             border-left: 4px solid var(--done);
         }
@@ -130,7 +163,7 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.35s ease, padding 0.35s ease;
-            background: #fff;
+            background: transparent;
         }
         .day-body.open {
             padding: 10px 12px;
@@ -167,7 +200,7 @@
             padding: 0.6rem 0.2rem;
         }
         .progress-section {
-            background: #f0f8ff;
+            background: rgba(240,248,255,0.95);
             padding: 1rem;
             border-radius: 8px;
             margin: 0.8rem 0;
@@ -200,6 +233,7 @@
         }
         .save-button:hover { background: #0052a3; }
         .muted { color: var(--muted); }
+
         @media (max-width: 768px) {
             .exercise-row { flex-direction: column; align-items: stretch; }
             .exercise-name, .exercise-input, .note-input { width: 100%; margin: 0.2rem 0; }
@@ -209,6 +243,10 @@
     </style>
 </head>
 <body>
+
+<!-- Фоновое слайд-шоу -->
+<div id="bg-slideshow" class="bg-slideshow" aria-hidden="true"></div>
+<div class="bg-overlay" aria-hidden="true"></div>
 
 <header>
     <h1>🔥 100‑дневный тренировочный план</h1>
@@ -289,6 +327,42 @@
 </div>
 
 <script>
+    // ===== ФОНОВОЕ СЛАЙД-ШОУ =====
+    // Используем папку images/
+    const bgImages = [
+        'images/motiv1.jpg',
+        'images/motiv2.jpg',
+        'images/motiv3.jpg'
+    ];
+    const BG_INTERVAL = 8000; // мс
+
+    function setupBackgroundSlideshow(){
+        const wrap = document.getElementById('bg-slideshow');
+        if (!wrap) return;
+
+        // создаём слайды
+        bgImages.forEach(src => {
+            const slide = document.createElement('div');
+            slide.className = 'bg-slide';
+            slide.style.backgroundImage = `url("${src}")`;
+            wrap.appendChild(slide);
+        });
+
+        const slides = wrap.querySelectorAll('.bg-slide');
+        if (slides.length === 0) return;
+
+        // предварительная загрузка (на случай кеша без <link rel="preload">)
+        slides.forEach(s => { const img = new Image(); img.src = s.style.backgroundImage.slice(5, -2); });
+
+        let i = 0;
+        slides[i].classList.add('active');
+        setInterval(() => {
+            slides[i].classList.remove('active');
+            i = (i + 1) % slides.length;
+            slides[i].classList.add('active');
+        }, BG_INTERVAL);
+    }
+
     // ===== ДАННЫЕ ПЛАНА =====
     const workoutPlan = {
         phase1: {
@@ -384,9 +458,7 @@
 
     // ===== СОСТОЯНИЕ И ХРАНИЛИЩЕ =====
     const STORAGE_KEY = 'workout100_data_v1';
-    let state = {
-        days: {} // { [dayNumber]: { completed: bool, entries: [ {w:'', n:''}, ... ] } }
-    };
+    let state = { days: {} }; // { [dayNumber]: { completed: bool, entries: [ {w:'', n:''}, ... ] } }
 
     function loadState() {
         try {
@@ -405,7 +477,6 @@
     function saveState() {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            // Небольшой визуальный фидбек
             const btn = document.querySelector('.save-button');
             if (!btn) return;
             const original = btn.textContent;
@@ -417,17 +488,14 @@
     }
 
     // ===== УТИЛИТЫ =====
-
     // День 1=Вторник. Массив начинается с Понедельника.
     function getWeekDay(dayNumber) {
         const days = ["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"];
         return days[dayNumber % 7]; // 1%7=1 => Вторник
     }
-
     function isRestWeekDay(weekDay) {
         return weekDay === "Понедельник" || weekDay === "Четверг";
     }
-
     function getDayPlan(dayNumber, phaseName) {
         const weekDay = getWeekDay(dayNumber);
         if (isRestWeekDay(weekDay)) {
@@ -437,12 +505,10 @@
         const list = plan[weekDay] || [];
         return { weekDay, rest: false, exercises: list.length ? list : ["Программа не определена для этого дня"] };
     }
-
     function ensureDayState(day, exerciseCount) {
         if (!state.days[day]) {
             state.days[day] = { completed: false, entries: Array.from({length: exerciseCount}, () => ({w:'', n:''})) };
         } else {
-            // Синхронизируем количество записей
             const current = state.days[day].entries || [];
             if (current.length !== exerciseCount) {
                 const next = Array.from({length: exerciseCount}, (_, i) => current[i] || {w:'', n:''});
@@ -450,7 +516,6 @@
             }
         }
     }
-
     function updateProgressUI() {
         const completed = Object.values(state.days).filter(d => d.completed).length;
         const percent = Math.round((completed / 100) * 100);
@@ -458,7 +523,6 @@
         document.getElementById('progress-fill').style.width = percent + '%';
         document.getElementById('progress-text').textContent = percent + '% выполнено';
     }
-
     function togglePhase(el) {
         const body = el.nextElementSibling;
         const arrow = el.querySelector('.arrow');
@@ -466,13 +530,12 @@
         body.style.display = opened ? 'none' : 'block';
         arrow.textContent = opened ? '▶' : '▼';
     }
-
     function toggleDayBody(header) {
         const body = header.nextElementSibling;
         const arrow = header.querySelector('.arrow');
-        const isOpen = body.classList.contains('open');
-        body.classList.toggle('open', !isOpen);
-        arrow.textContent = isOpen ? '▶' : '▼';
+        theOpen = body.classList.contains('open');
+        body.classList.toggle('open', !theOpen);
+        arrow.textContent = theOpen ? '▶' : '▼';
     }
 
     // ===== ГЕНЕРАЦИЯ ДНЕЙ =====
@@ -491,6 +554,7 @@
 
             const header = document.createElement('div');
             header.className = 'day-header' + (rest ? ' rest-day' : '') + (dayState.completed ? ' done' : '');
+
             const left = document.createElement('div');
             left.className = 'left';
             left.textContent = `День ${day} — ${weekDay}`;
@@ -498,7 +562,6 @@
             const right = document.createElement('div');
             right.className = 'right';
 
-            // Отметка выполнения
             const doneLabel = document.createElement('label');
             doneLabel.className = 'done-checkbox';
             const doneInput = document.createElement('input');
@@ -525,7 +588,6 @@
 
             header.appendChild(left);
             header.appendChild(right);
-
             header.addEventListener('click', () => toggleDayBody(header));
 
             const body = document.createElement('div');
@@ -586,13 +648,12 @@
 
     // ===== ИНИЦИАЛИЗАЦИЯ =====
     document.addEventListener('DOMContentLoaded', () => {
+        setupBackgroundSlideshow(); // фон
         loadState();
         generateDays('phase1', 1, 30, 'phase1-body');
         generateDays('phase2', 31, 70, 'phase2-body');
         generateDays('phase3', 71, 100, 'phase3-body');
         updateProgressUI();
-        // Все фазы по умолчанию свернуты (оставляем так). Можно раскрыть первую:
-        // document.querySelector('#phase1-body')?.previousElementSibling?.click();
     });
 </script>
 
