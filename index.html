@@ -1,0 +1,226 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>100‑дневный тренировочный план</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* ────────────────────── Общие стили ────────────────────── */
+        body{
+            margin:0;
+            font-family:Arial,Helvetica,sans-serif;
+            line-height:1.6;
+            color:#333;
+            background:#f9f9f9;
+        }
+        a{color:#0066cc;}
+        h1,h2,h3{margin:0.5em 0;}
+        .container{
+            max-width:1200px;
+            margin:auto;
+            padding:1rem;
+        }
+        header{
+            background:#0066cc;
+            color:#fff;
+            padding:1rem 0;
+            text-align:center;
+        }
+        nav{
+            margin-top:0.5rem;
+        }
+        nav a{
+            margin:0 0.5rem;
+            color:#fff;
+            text-decoration:none;
+            font-weight:bold;
+        }
+        /* ────────────────────── Секции ────────────────────── */
+        section{
+            background:#fff;
+            margin:1rem 0;
+            padding:1rem;
+            border-radius:6px;
+            box-shadow:0 2px 4px rgba(0,0,0,.1);
+        }
+        /* ────────────────────── Таблица плана ────────────────────── */
+        .schedule-table{
+            width:100%;
+            border-collapse:collapse;
+            font-size:0.9rem;
+        }
+        .schedule-table th,
+        .schedule-table td{
+            border:1px solid #ddd;
+            padding:0.4rem 0.6rem;
+            text-align:center;
+        }
+        .schedule-table th{
+            background:#0066cc;
+            color:#fff;
+            position:sticky;
+            top:0;
+            z-index:2;
+        }
+        .schedule-table input{
+            width:80%;
+            padding:0.2rem;
+            border:1px solid #ccc;
+            border-radius:4px;
+            text-align:center;
+        }
+        /* ────────────────────── Адаптивность ────────────────────── */
+        @media (max-width:768px){
+            header{font-size:1.2rem;}
+            nav a{display:block;margin:0.2rem 0;}
+            .schedule-table th,
+            .schedule-table td{
+                padding:0.3rem 0.4rem;
+                font-size:0.8rem;
+            }
+            .schedule-table{
+                display:block;
+                overflow-x:auto;
+                white-space:nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>100‑дневный тренировочный план</h1>
+    <nav>
+        <a href="#about">О плане</a>
+        <a href="#phases">Фазы</a>
+        <a href="#schedule">График</a>
+        <a href="#tips">Советы</a>
+    </nav>
+</header>
+
+<div class="container">
+
+    <!-- ───── Описание ───── -->
+    <section id="about">
+        <h2>О плане</h2>
+        <p>Трёхфазный 100‑дневный план с отдыхом в понедельник и четверг. Каждый тренировочный день начинается с разминки (10‑15 мин) и заканчивается заминкой (5‑10 мин).</p>
+    </section>
+
+    <!-- ───── Фазы ───── -->
+    <section id="phases">
+        <h2>Фазы</h2>
+
+        <h3>Фаза 1 – Адаптация (дни 1‑30)</h3>
+        <p>Лёгкие веса, много повторений (12‑15). Цель – освоить технику и улучшить мобильность.</p>
+
+        <h3>Фаза 2 – Интенсификация (дни 31‑70)</h3>
+        <p>Увеличиваем нагрузки, снижаем повторения (8‑12). Цель – рост силы и мышечной массы.</p>
+
+        <h3>Фаза 3 – Преображение (дни 71‑100)</h3>
+        <p>Супер‑сеты, работа на рельеф и выносливость.</p>
+    </section>
+
+    <!-- ───── Таблица‑график ───── -->
+    <section id="schedule">
+        <h2>График тренировок (Вт, Ср, Пт, Сб, Вс – активные дни)</h2>
+
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>День</th>
+                    <th>Фаза</th>
+                    <th>Тренировка</th>
+                    <th>Рабочий вес (кг)</th>
+                    <th>Результат / Примечание</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-body">
+                <!-- Заполняется скриптом -->
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ───── Советы ───── -->
+    <section id="tips">
+        <h2>Неизменные составляющие успеха</h2>
+        <ul>
+            <li><strong>Питание:</strong> дефицит калорий, достаточное количество белка.</li>
+            <li><strong>Вода:</strong> 3‑4 л в день.</li>
+            <li><strong>Сон:</strong> 7‑8 ч качественного сна.</li>
+            <li>Техника важнее веса – без боли в суставах.</li>
+            <li>Ведите дневник тренировок и питания, делайте фото раз в 2 недели.</li>
+        </ul>
+    </section>
+
+</div>
+
+<script>
+    // -------------------- Генерация таблицы --------------------
+    const tbody = document.getElementById('schedule-body');
+
+    // Функция возвращает название фазы по номеру дня
+    function getPhase(day) {
+        if (day <= 30) return 'Фаза 1';
+        if (day <= 70) return 'Фаза 2';
+        return 'Фаза 3';
+    }
+
+    // Функция возвращает тип тренировки (по расписанию)
+    function getWorkout(day) {
+        const weekDay = (day % 7); // 0‑6, где 0 – Пн, 1 – Вт, …
+        switch (weekDay) {
+            case 0: return 'ОТДЫХ (Пн)';
+            case 1: return 'Тренировка (Вт)';
+            case 2: return 'Тренировка (Ср)';
+            case 3: return 'ОТДЫХ (Чт)';
+            case 4: return 'Тренировка (Пт)';
+            case 5: return 'Тренировка (Сб)';
+            case 6: return 'Активный отдых (Вс)';
+            default: return '';
+        }
+    }
+
+    for (let d = 1; d <= 100; d++) {
+        const tr = document.createElement('tr');
+
+        // День
+        const tdDay = document.createElement('td');
+        tdDay.textContent = d;
+        tr.appendChild(tdDay);
+
+        // Фаза
+        const tdPhase = document.createElement('td');
+        tdPhase.textContent = getPhase(d);
+        tr.appendChild(tdPhase);
+
+        // Тренировка
+        const tdWork = document.createElement('td');
+        tdWork.textContent = getWorkout(d);
+        tr.appendChild(tdWork);
+
+        // Вес
+        const tdWeight = document.createElement('td');
+        const inpWeight = document.createElement('input');
+        inpWeight.type = 'number';
+        inpWeight.min = '0';
+        inpWeight.placeholder = 'кг';
+        tdWeight.appendChild(inpWeight);
+        tr.appendChild(tdWeight);
+
+        // Результат
+        const tdResult = document.createElement('td');
+        const inpResult = document.createElement('input');
+        inpResult.type = 'text';
+        inpResult.placeholder = 'заметка';
+        tdResult.appendChild(inpResult);
+        tr.appendChild(tdResult);
+
+        tbody.appendChild(tr);
+    }
+</script>
+
+</body>
+</html>
+```
+
